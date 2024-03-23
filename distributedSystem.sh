@@ -54,7 +54,9 @@ echo "remote directory: $remoteDirectory"
 
 # Zeilenweise den Inhalt der Datei ausgeben
 while IFS= read -r ip; do
-
+  # track process
+  ./track_process.sh $$ &
+  
   #nur für debugging
   #echo "$ip"
 
@@ -73,14 +75,14 @@ while IFS= read -r ip; do
       #rootDirectory="~/Files/"
       #sendingCommand="$rootDirectory $username@$ip:/home/admin/VTDS/Files/"
       #echo "Bashcommand: $sendingCommand"
-      sshpass -p $password rsync -r $HOME$rootDirectory $username@$ip:$HOME$remoteDirectory
+      sshpass -p $password rsync -r $(pwd)$rootDirectory $username@$ip:$(pwd)$remoteDirectory
       #sshpass -p $password rsync -r ~/VTDS/Files/ $username@$ip:~/VTDS/Files/
       echo "Raspberry Pi upload fertig"
       #wenn raspi gefunden und synchronisiert, abbrechen
       exit 1
     elif [ "$command" == "download" ]; then
       #downloaden der dateien
-      sshpass -p $password rsync -r $username@$ip:$HOME$remoteDirectory $HOME$rootDirectory
+      sshpass -p $password rsync -r $username@$ip:$(pwd)$remoteDirectory $(pwd)$rootDirectory
       echo "Raspberry Pi download fertig"
     else
       echo "Ungültiges Kommando. Verwenden Sie 'download' oder 'upload'."
