@@ -5,6 +5,9 @@
 #erstelle slaves.txt mit in jeder zeile einer ip zum anfragen
 #erstelle config.txt mit username (erste zeile) und passwort (zweite zeile), rootdirectory (dritte zeiel) und  remote directory (vierte zeile)
 
+#startzeit speichern
+start=$(date +%s.%N)
+echo "Startzeit: $(date +"%r")"
 
 # Dateiname für die IP-Adressen
 ip_file="slaves.txt"
@@ -13,23 +16,23 @@ config_file="config.txt"
 
 # Überprüfen, ob mindestens ein Parameter übergeben wurde
 if [ $# -eq 0 ]; then
-    echo "Keine Parameter übergeben. Bitte Parameter angeben."
+    echo "$(date +"%r") Keine Parameter übergeben. Bitte Parameter angeben."
     exit 1
 fi
 
 # Erster übergebener Parameter ist $1, zweiter ist $2 usw.
 command="$1"
-echo "Kommando: $command"
+echo "$(date +"%r") Kommando: $command"
 
 
 # Überprüfen, ob die Datei existiert
 if [[ ! -f $ip_file ]]; then
-  echo "Die angegebene IP-Adress Datei existiert nicht."
+  echo "$(date +"%r") Die angegebene IP-Adress Datei existiert nicht."
   exit 1
 fi
 
 if [[ ! -f $config_file ]]; then
-  echo "Die angegebene Konfig Datei existiert nicht."
+  echo "$(date +"%r") Die angegebene Konfig Datei existiert nicht."
   exit 1
 fi
 
@@ -49,8 +52,8 @@ remoteDirectory=$(sed -n '4p' $config_file)
 # Ausgabe der gespeicherten Informationen nur debugging
 #echo "Benutzername: $username"
 #echo "Passwort: $password"
-echo "root directory: $rootDirectory"
-echo "remote directory: $remoteDirectory"
+echo "$(date +"%r") root directory: $rootDirectory"
+echo "$(date +"%r") remote directory: $remoteDirectory"
 
 # Zeilenweise den Inhalt der Datei ausgeben
 while IFS= read -r ip; do
@@ -77,20 +80,50 @@ while IFS= read -r ip; do
       #echo "Bashcommand: $sendingCommand"
       sshpass -p $password rsync -r $(pwd)$rootDirectory $username@$ip:$(pwd)$remoteDirectory
       #sshpass -p $password rsync -r ~/VTDS/Files/ $username@$ip:~/VTDS/Files/
-      echo "Raspberry Pi upload fertig"
+      echo "$(date +"%r") Raspberry Pi upload fertig"
       #wenn raspi gefunden und synchronisiert, abbrechen
+      
+      # Endzeit speichern
+      end=$(date +%s.%N)
+      #laufzeit berechnen
+      runtime=$(echo "$end - $start" | bc)
+      echo "Ausfueherungseit: $runtime s"
+    
       exit 1
     elif [ "$command" == "download" ]; then
       #downloaden der dateien
       sshpass -p $password rsync -r $username@$ip:$(pwd)$remoteDirectory $(pwd)$rootDirectory
-      echo "Raspberry Pi download fertig"
+      echo "$(date +"%r") Raspberry Pi download fertig"
+      
+      # Endzeit speichern
+      end=$(date +%s.%N)
+      #laufzeit berechnen
+      runtime=$(echo "$end - $start" | bc)
+      echo "Ausfueherungseit: $runtime s"
+      
     else
-      echo "Ungültiges Kommando. Verwenden Sie 'download' oder 'upload'."
+      echo "$(date +"%r") Ungültiges Kommando. Verwenden Sie 'download' oder 'upload'."
+      # Endzeit speichern
+      end=$(date +%s.%N)
+      #laufzeit berechnen
+      runtime=$(echo "$end - $start" | bc)
+      echo "Ausfueherungseit: $runtime s"
       exit 1
     fi
     break
   else
-    echo "$ip nicht erreichbar"
+    echo "$(date +"%r") $ip nicht erreichbar"
+    # Endzeit speichern
+    end=$(date +%s.%N)
+    #laufzeit berechnen
+    runtime=$(echo "$end - $start" | bc)
+    echo "Ausfueherungseit: $runtime s"
   fi
 
 done < "$ip_file"
+
+# Endzeit speichern
+end=$(date +%s.%N)
+#laufzeit berechnen
+runtime=$(echo "$end - $start" | bc)
+echo "Ausfueherungseit: $runtime s"
