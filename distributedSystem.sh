@@ -56,11 +56,15 @@ rootDirectory=$(sed -n '3p' $config_file)
 #lese verzeichnis remote ein (vierte Zeile)
 remoteDirectory=$(sed -n '4p' $config_file)
 
+#lese den boolean ein,ob es eine Stern- oder Reihenverteilung ist.
+rowSyncronisation=$(sed -n '5p' $config_file)
+
 # Ausgabe der gespeicherten Informationen nur debugging
-#echo "Benutzername: $username"
-#echo "Passwort: $password"
-echo "root directory: $rootDirectory"
-echo "remote directory: $remoteDirectory"
+#echo "$(date +"%r") Benutzername: $username"
+#echo "$(date +"%r") Passwort: $password"
+echo "$(date +"%r") root directory: $rootDirectory"
+echo "$(date +"%r") remote directory: $remoteDirectory"
+echo "$(date +"%r") Reihensynchronisation: $rowSyncronisation"
 
 # Zeilenweise den Inhalt der Datei ausgeben
 while IFS= read -r ip; do
@@ -82,21 +86,19 @@ while IFS= read -r ip; do
     #daten synchronisieren mit rsync 
     if [ "$command" == "upload" ]; then
       # uploaden der dateien
-
-      #rootDirectory="~/Files/"
-      #sendingCommand="$rootDirectory $username@$ip:/home/admin/VTDS/Files/"
-      #echo "Bashcommand: $sendingCommand"
       sshpass -p $password rsync -r $HOME$rootDirectory $username@$ip:$HOME$remoteDirectory
       #sshpass -p $password rsync -r ~/VTDS/Files/ $username@$ip:~/VTDS/Files/
       
-      # Endzeit speichern
-      #end=$(date +%s.%N)
       echo "$(date +"%r") Raspberry Pi upload fertig"
       #laufzeit berechnen
-      #runtime=$(echo "$end - $start" | bc)
       echo "Ausfueherungseit: $SECONDS s"
-      #wenn raspi gefunden und synchronisiert, abbrechen
-      exit 1
+
+      if [ "$rowSyncronisation" == "true" ]; then
+          #wenn raspi gefunden und synchronisiert (und Reihensynchronisation), abbrechen
+          exit 1
+      else
+          #brauchen wir hier noch ein continue um in die nächste schleifen iteration zu kommen?
+      fi    
     elif [ "$command" == "download" ]; then
       #downloaden der dateien
       sshpass -p $password rsync -r $username@$ip:$HOME$remoteDirectory $HOME$rootDirectory
@@ -117,7 +119,8 @@ while IFS= read -r ip; do
       echo "Ausfuehrungszeit: $SECONDS s"
       exit 1
     fi
-    break
+    #break entfernen, da er mehrere ip adressen in einem schwung synchronisieren soll
+    #break
   else
     echo "$(date +"%r") $ip nicht erreichbar"
   fi
@@ -125,10 +128,5 @@ while IFS= read -r ip; do
 done < "$ip_file"
 
 
-# Endzeit speichern
-#end=$(date +%s.%N)
-
 # Berechnung der Laufzeit
-#runtime=$(echo "$end - $start" | bc)
-
 echo "Ausfuehrungszeit $SECONDS s"
