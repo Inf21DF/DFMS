@@ -11,6 +11,19 @@
 SECONDS=0
 start=$(date +%s.%N)
 echo "Startzeit: $(date +"%r")"
+echo "PID: $$"
+
+pid_file="/tmp/pid_file.txt"
+
+# Überprüfen, ob die PID-Datei bereits existiert
+if [ -f "$pid_file" ]; then
+    echo "$(date +"%r") $$ PID-Datei existiert bereits. Beende das Skript."
+    exit 1
+fi
+
+# Schreibe die eigene PID in die Datei
+echo $$ > "$pid_file"
+echo "$(date +"%r") $$ PID erfolgreich in die Datei geschrieben."
 
 # Dateiname für die IP-Adressen
 ip_file="/home/pi/DFMS/slaves.txt"
@@ -19,7 +32,7 @@ config_file="/home/pi/DFMS/config.txt"
 
 # Überprüfen, ob mindestens ein Parameter übergeben wurde
 if [ $# -eq 0 ]; then
-    echo "Keine Parameter übergeben. Bitte Parameter angeben."
+    echo "$(date +"%r") $$ Keine Parameter übergeben. Bitte Parameter angeben."
     exit 1
 fi
 
@@ -32,14 +45,14 @@ echo "Kommando: $command"
 if [[ -f $ip_file ]]; then
   echo "IP-Adressdatei existiert"
 else
-  echo "$(date +"%r") Die angegebene IP-Adress Datei existiert nicht. huhu"
+  echo "$(date +"%r") $$ Die angegebene IP-Adress Datei existiert nicht. huhu"
   exit 1
 fi
 
 if [[ -f $config_file ]]; then
   echo "Config Datei existiert"
 else
-  echo "$(date +"%r") Die angegebene Konfig Datei existiert nicht."
+  echo "$(date +"%r") $$ Die angegebene Konfig Datei existiert nicht."
   exit 1
 fi
 
@@ -60,15 +73,15 @@ remoteDirectory=$(sed -n '4p' $config_file)
 rowSyncronisation=$(sed -n '5p' $config_file)
 
 # Ausgabe der gespeicherten Informationen nur debugging
-#echo "$(date +"%r") Benutzername: $username"
-#echo "$(date +"%r") Passwort: $password"
-echo "$(date +"%r") root directory: $rootDirectory"
-echo "$(date +"%r") remote directory: $remoteDirectory"
-echo "$(date +"%r") Reihensynchronisation: $rowSyncronisation"
+#echo "$(date +"%r"); $$ Benutzername: $username"
+#echo "$(date +"%r"); $$ Passwort: $password"
+echo "$(date +"%r"); $$ root directory: $rootDirectory"
+echo "$(date +"%r"); $$ remote directory: $remoteDirectory"
+echo "$(date +"%r"); $$ Reihensynchronisation: $rowSyncronisation"
 
 
 if [ "$command" == "show" ]; then
-    echo "$(date +"%r") Dateien in /Files/"
+    echo "$(date +"%r"); $$ Dateien in /Files/"
     ls /Files/
 fi
 
@@ -84,7 +97,7 @@ while IFS= read -r ip; do
 
   #ist die ip erreichbar?
   if ping -c 1 $ip &> /dev/null; then
-    echo "$(date +"%r") $ip ist erreichbar."
+    echo "$(date +"%r"); $$ $ip ist erreichbar."
 
 
     # Kommando anzeigen
@@ -96,12 +109,14 @@ while IFS= read -r ip; do
       sshpass -p $password rsync -r $HOME$rootDirectory $username@$ip:$HOME$remoteDirectory
       #sshpass -p $password rsync -r ~/VTDS/Files/ $username@$ip:~/VTDS/Files/
       
-      echo "$(date +"%r") Raspberry Pi upload fertig"
+      echo "$(date +"%r"); $$ Raspberry Pi upload fertig"
       #laufzeit berechnen
       echo "Ausfueherungseit: $SECONDS s"
 
       if [ "$rowSyncronisation" == "true" ]; then
           #wenn raspi gefunden und synchronisiert (und Reihensynchronisation), abbrechen
+          # Lösche die PID-Datei am Ende des Skripts
+          trap "rm -f $pid_file" EXIT
           exit 1
       else
           #brauchen wir hier noch ein continue um in die nächste schleifen iteration zu kommen?
@@ -112,10 +127,10 @@ while IFS= read -r ip; do
       
       # Endzeit speichern
       #end=$(date +%s.%N)
-      echo "$(date +"%r") Raspberry Pi download fertig"
+      echo "$(date +"%r"); $$ Raspberry Pi download fertig"
       # Berechnung der Laufzeit
       #runtime=$(echo "$end - $start" | bc)
-      echo "Ausfuehrungszeit: $SECONDS s"
+      echo "$$ Ausfuehrungszeit: $SECONDS s"
     else
       echo "Ungültiges Kommando. Verwenden Sie 'download' oder 'upload'."
       # Endzeit speichern
@@ -123,17 +138,24 @@ while IFS= read -r ip; do
 
       # Berechnung der Laufzeit
       #runtime=$(echo "$end - $start" | bc)
-      echo "Ausfuehrungszeit: $SECONDS s"
+      echo "$$ Ausfuehrungszeit: $SECONDS s"
+      # Lösche die PID-Datei am Ende des Skripts
+      trap "rm -f $pid_file" EXIT
       exit 1
     fi
     #break entfernen, da er mehrere ip adressen in einem schwung synchronisieren soll
     #break
   else
-    echo "$(date +"%r") $ip nicht erreichbar"
+    echo "$(date +"%r"); $$ $ip nicht erreichbar"
   fi
 
 done < "$ip_file"
 
 
 # Berechnung der Laufzeit
-echo "Ausfuehrungszeit $SECONDS s"
+echo "$$ Ausfuehrungszeit $SECONDS s"
+
+# Lösche die PID-Datei am Ende des Skripts
+trap "rm -f $pid_file" EXIT
+
+exit 1
