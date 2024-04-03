@@ -66,6 +66,13 @@ echo "$(date +"%r") root directory: $rootDirectory"
 echo "$(date +"%r") remote directory: $remoteDirectory"
 echo "$(date +"%r") Reihensynchronisation: $rowSyncronisation"
 
+
+if [ "$command" == "show" ]; then
+    echo "$(date +"%r") Dateien in /Files/"
+    ls /Files/
+fi
+
+
 # Zeilenweise den Inhalt der Datei ausgeben
 while IFS= read -r ip; do
 
