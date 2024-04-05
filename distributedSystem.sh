@@ -88,17 +88,16 @@ fi
 
 # Zeilenweise den Inhalt der Datei ausgeben
 while IFS= read -r ip; do
+  # track process
+  #echo "$(date +"%r") track process: .$(pwd)/DFMS/track_process.sh $$ &"  
+  #bash $(pwd)/DFMS/track_process.sh $$ &
 
   #nur für debugging
   #echo "$ip"
-  
-  # track process
-  bash $(pwd)/DFMS/track_process.sh $$ &
 
   #ist die ip erreichbar?
   if ping -c 1 $ip &> /dev/null; then
     echo "$(date +"%r"); $$ $ip ist erreichbar."
-
 
     # Kommando anzeigen
     # echo "Komando: $command"
@@ -106,6 +105,13 @@ while IFS= read -r ip; do
     #daten synchronisieren mit rsync 
     if [ "$command" == "upload" ]; then
       # uploaden der dateien
+      #########################################################
+      ##HIER IST EIN FEHLER!!! 
+      ##rootDirectory="~/Files/"
+      ##sendingCommand="$rootDirectory $username@$ip:/home/admin/VTDS/Files/"
+      ##echo "Bashcommand: $sendingCommand"
+      #echo "$(date +"%r") directory: $(pwd)$rootDirectory"
+      #########################################################      
       sshpass -p $password rsync -r $HOME$rootDirectory $username@$ip:$HOME$remoteDirectory
       #sshpass -p $password rsync -r ~/VTDS/Files/ $username@$ip:~/VTDS/Files/
       
@@ -124,13 +130,18 @@ while IFS= read -r ip; do
     elif [ "$command" == "download" ]; then
       #downloaden der dateien
       sshpass -p $password rsync -r $username@$ip:$HOME$remoteDirectory $HOME$rootDirectory
+      #########################################################
+      #sshpass -p $password rsync -r $username@$ip:$(pwd)$remoteDirectory $(pwd)$rootDirectory
+      #echo "$(date +"%r") Raspberry Pi download fertig"
+      #########################################################
       
       # Endzeit speichern
       #end=$(date +%s.%N)
       echo "$(date +"%r"); $$ Raspberry Pi download fertig"
       # Berechnung der Laufzeit
       #runtime=$(echo "$end - $start" | bc)
-      echo "$$ Ausfuehrungszeit: $SECONDS s"
+      echo "$$ Ausfuehrungseit: $SECONDS s"
+      
     else
       echo "Ungültiges Kommando. Verwenden Sie 'download' oder 'upload'."
       # Endzeit speichern
@@ -138,13 +149,13 @@ while IFS= read -r ip; do
 
       # Berechnung der Laufzeit
       #runtime=$(echo "$end - $start" | bc)
-      echo "$$ Ausfuehrungszeit: $SECONDS s"
+      echo "$$ Ausfuehrungseit: $SECONDS s"
       # Lösche die PID-Datei am Ende des Skripts
       trap "rm -f $pid_file" EXIT
       exit 1
     fi
     #break entfernen, da er mehrere ip adressen in einem schwung synchronisieren soll
-    #break
+    #break ############################### AUF LIVE-PI ZEIL NICHT KOMMENTIERT
   else
     echo "$(date +"%r"); $$ $ip nicht erreichbar"
   fi
@@ -153,7 +164,7 @@ done < "$ip_file"
 
 
 # Berechnung der Laufzeit
-echo "$$ Ausfuehrungszeit $SECONDS s"
+echo "$$ Ausfuehrungseit $SECONDS s"
 
 # Lösche die PID-Datei am Ende des Skripts
 trap "rm -f $pid_file" EXIT
