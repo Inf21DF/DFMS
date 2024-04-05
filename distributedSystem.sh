@@ -105,16 +105,21 @@ while IFS= read -r ip; do
     #daten synchronisieren mit rsync 
     if [ "$command" == "upload" ]; then
       # uploaden der dateien
-      #########################################################
+      
       ##HIER IST EIN FEHLER!!! 
       ##rootDirectory="~/Files/"
       ##sendingCommand="$rootDirectory $username@$ip:/home/admin/VTDS/Files/"
       ##echo "Bashcommand: $sendingCommand"
-      #echo "$(date +"%r") directory: $(pwd)$rootDirectory"
-      #########################################################      
-      sshpass -p $password rsync -r $HOME$rootDirectory $username@$ip:$HOME$remoteDirectory
+      echo "$(date +"%r") directory: $(pwd)$rootDirectory"
+      sshpass -p $password rsync -r $(pwd)$rootDirectory $username@$ip:$(pwd)$remoteDirectory
       #sshpass -p $password rsync -r ~/VTDS/Files/ $username@$ip:~/VTDS/Files/
+      echo "$(date +"%r") Raspberry Pi upload fertig"
       
+      #########################################################      
+      #sshpass -p $password rsync -r $HOME$rootDirectory $username@$ip:$HOME$remoteDirectory
+      #sshpass -p $password rsync -r ~/VTDS/Files/ $username@$ip:~/VTDS/Files/
+      #########################################################
+
       echo "$(date +"%r"); $$ Raspberry Pi upload fertig"
       #laufzeit berechnen
       echo "Ausfueherungseit: $SECONDS s"
@@ -129,11 +134,11 @@ while IFS= read -r ip; do
       fi    
     elif [ "$command" == "download" ]; then
       #downloaden der dateien
-      sshpass -p $password rsync -r $username@$ip:$HOME$remoteDirectory $HOME$rootDirectory
       #########################################################
-      #sshpass -p $password rsync -r $username@$ip:$(pwd)$remoteDirectory $(pwd)$rootDirectory
-      #echo "$(date +"%r") Raspberry Pi download fertig"
+      #sshpass -p $password rsync -r $username@$ip:$HOME$remoteDirectory $HOME$rootDirectory
       #########################################################
+      sshpass -p $password rsync -r $username@$ip:$(pwd)$remoteDirectory $(pwd)$rootDirectory
+      echo "$(date +"%r") Raspberry Pi download fertig"
       
       # Endzeit speichern
       #end=$(date +%s.%N)
@@ -155,7 +160,7 @@ while IFS= read -r ip; do
       exit 1
     fi
     #break entfernen, da er mehrere ip adressen in einem schwung synchronisieren soll
-    #break ############################### AUF LIVE-PI ZEIL NICHT KOMMENTIERT
+    break
   else
     echo "$(date +"%r"); $$ $ip nicht erreichbar"
   fi
