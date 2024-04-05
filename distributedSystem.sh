@@ -93,7 +93,7 @@ while IFS= read -r ip; do
   #echo "$ip"
   
   # track process
-  ./track_process.sh $$ &
+  bash $(pwd)/DFMS/track_process.sh $$ &
 
   #ist die ip erreichbar?
   if ping -c 1 $ip &> /dev/null; then
