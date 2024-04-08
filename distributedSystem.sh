@@ -33,6 +33,7 @@ config_file="/home/pi/DFMS/config.txt"
 # Überprüfen, ob mindestens ein Parameter übergeben wurde
 if [ $# -eq 0 ]; then
     echo "$(date +"%r") $$ Keine Parameter übergeben. Bitte Parameter angeben."
+    rm $pid_file
     exit 1
 fi
 
@@ -46,6 +47,7 @@ if [[ -f $ip_file ]]; then
   echo "IP-Adressdatei existiert"
 else
   echo "$(date +"%r") $$ Die angegebene IP-Adress Datei existiert nicht. huhu"
+  rm $pid_file
   exit 1
 fi
 
@@ -53,6 +55,7 @@ if [[ -f $config_file ]]; then
   echo "Config Datei existiert"
 else
   echo "$(date +"%r") $$ Die angegebene Konfig Datei existiert nicht."
+  rm $pid_file
   exit 1
 fi
 
